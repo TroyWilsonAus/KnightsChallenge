@@ -48,6 +48,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Util.fs" />
+    <Compile Include="Square.fs" />
+    <Compile Include="Move.fs" />
+    <Compile Include="Piece.fs" />
+    <Compile Include="Board.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
   </ItemGroup>
