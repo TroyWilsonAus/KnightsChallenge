@@ -1,6 +1,8 @@
 ﻿module Piece
 
+open System
 open Square
+open Util
 
 type moveOffset (row, column) =
     member self.Row = row
@@ -18,11 +20,20 @@ let private moveMap = seq {
                        }
 
 type Piece (position: Square) = 
-    let currentSquare = position
+    
+    let currentSquare = position    
+    let logNewPosition = 
+        if System.Diagnostics.Debugger.IsAttached then
+            System.Threading.Thread.CurrentThread.Join 250 |> ignore
+        
+    
+    
     let buildMoves = 
             seq{
                 for o in moveMap do
                     yield new PossibleSquare(currentSquare.Row + o.Row, currentSquare.Column + o.Column)
                 }
+    
 
     member self.BuildMoves = buildMoves
+    member self.LogPosition = logNewPosition

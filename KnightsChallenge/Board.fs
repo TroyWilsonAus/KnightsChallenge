@@ -19,7 +19,8 @@ let createDefaultSquares =
         }
 
 type PlayingBoardState (squares: List<Square>) =
-    let getAvailableSquares = fun _ -> squares |> List.filter( fun s -> s.Status = Available)
+    let getAvailableSquares = 
+        squares |> List.filter( fun s -> s.Status = Available)
 
     member self.availableSquares = getAvailableSquares
     member self.Squares = squares
@@ -30,14 +31,39 @@ type PlayingBoard() =
                                 let squares = createDefaultSquares |> Seq.toList
                                 new PlayingBoardState(squares)
 
-    let states = List.init 1 createInitialState
+    let mutable states = List.init 1 createInitialState
+    let CurrentState = states |> List.last
+        
+
+    let updateState = fun (square : Square) ->
+        let currentState = CurrentState
+        let squaresToRemove = currentState.Squares |> List.filter (fun s -> s.Column = square.Column & s.Row = square.Row )
+        let mostSquares = currentState.Squares |> List.except squaresToRemove
+        let squaresToAdd = seq { square} |> Seq.toList 
+        let allSquares = mostSquares |> List.append squaresToAdd 
+        let newState = new PlayingBoardState(allSquares)
+        let newStateList = seq { newState} |> Seq.toList
+        states <- states |> List.append newStateList
+
+    let findSquare  = fun (possible: PossibleSquare) ->
+        let currentState = CurrentState
+        let squares = currentState.availableSquares 
+        let foundSquare = squares |> List.tryFind(fun s -> possible.Column = s.Column && possible.Row = s.Row)
+        foundSquare
+
 
     member self.GetNextMove(piece: Piece) = 
-        let moves = piece.BuildMoves
-        let currentState = states |> List.last
-        let squares = currentState.availableSquares
+        let possibleMoves = piece.BuildMoves |> Seq.toList
+        
+        
         //for m in moves do
-        new Move(piece, piece)
+        let destination = possibleMoves |> List.tryFind(fun m -> 
+                match findSquare m with 
+                | Some s -> true
+                | None _ -> false)
+        match destination with
+            | Some m -> Option.Some m
+            | None _ -> Option.None
     
     member self.SetStartPosition row column = 
         if (states |> List.length <> 1) then
@@ -47,3 +73,9 @@ type PlayingBoard() =
         let piece = new Piece(requiredSquare)
         //logFun "Setting start position: Row %d, Column %d" (requiredSquare.Row, requiredSquare.Column)
         piece
+
+    member self.PerformMove(move : PossibleSquare) =
+        let square = findSquare move
+        match square with
+        | Some s -> new Piece(s)
+        | None _ -> raise (InvalidStateException())

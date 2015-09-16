@@ -19,10 +19,15 @@ let main argv =
     for s in allSquares do
         let res = logFun "Creating playing board %s" "test"
         let board = new PlayingBoard()
-        let piece = board.SetStartPosition s.Row s.Column
-        let move = board.GetNextMove(piece)
-        while (true) do
-            ignore
-        
+        let mutable piece = board.SetStartPosition s.Row s.Column
+        let mutable move = board.GetNextMove(piece)
+        while (move.IsSome) do
+            if System.Diagnostics.Debugger.IsAttached then
+                System.Threading.Thread.CurrentThread.Join 500 |> ignore
+            
+            piece <- board.PerformMove(move.Value)
+            piece.LogPosition |> ignore
+
+            move <- board.GetNextMove(piece)
 
     0 // return an integer exit code
