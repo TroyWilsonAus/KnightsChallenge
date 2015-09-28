@@ -58,8 +58,7 @@ type PlayingBoard() =
 
 
     member self.GetNextMove(piece: Piece) = 
-        let possibleMoves = piece.BuildMoves |> Seq.toList
-        
+        let possibleMoves = piece.BuildMoves |> Seq.toList        
         
         //for m in moves do
         let destination = possibleMoves |> List.tryFind(fun m -> 
