@@ -9,7 +9,7 @@ type Square (row: int, column: int, status: SquareStatus) =
     member self.ChangeStatus status = 
         new Square(self.Row, self.Column, status)
 
-[<CustomEquality>]
+//[<CustomEquality>]
 type PossibleSquare (row: int, column: int) =
     member self.Row = row
     member self.Column = column

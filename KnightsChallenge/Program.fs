@@ -23,7 +23,7 @@ let main argv =
         let mutable move = board.GetNextMove(piece)
         while (move.IsSome) do
             if System.Diagnostics.Debugger.IsAttached then
-                System.Threading.Thread.CurrentThread.Join 500 |> ignore
+                System.Threading.Thread.CurrentThread.Join 100 |> ignore
             
             piece <- board.PerformMove(move.Value)
             piece.LogPosition |> ignore
