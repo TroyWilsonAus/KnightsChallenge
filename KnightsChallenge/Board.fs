@@ -56,18 +56,37 @@ type PlayingBoard() =
         updateStatus newSquare
         new Piece(newSquare)
 
+   
+    let rollBackMove = fun () ->
+        printfn "Rolling back move, before: %d" states.Length
+        states <- states.Tail
+        printfn "Rolling back move, after: %d" states.Length
+        //GetNextMove(piece)
 
-    member self.GetNextMove(piece: Piece) = 
+    let rec getNextMove_Impl = fun (piece: Piece) ->
         let possibleMoves = piece.BuildMoves |> Seq.toList        
         
+        let tryPrevMov = fun () ->
+            rollBackMove()
+            getNextMove_Impl(piece)
+
         //for m in moves do
         let destination = possibleMoves |> List.tryFind(fun m -> 
                 match findSquare m with 
                 | Some s -> true
                 | None _ -> false)
+
         match destination with
             | Some m -> Option.Some m
-            | None _ -> Option.None
+            | None _ -> tryPrevMov()
+
+    member self.GetNextMove(piece: Piece) = 
+        getNextMove_Impl(piece)
+                                
+                        
+
+    
+
     
     member self.SetStartPosition row column = 
         if (states |> List.length <> 1) then
