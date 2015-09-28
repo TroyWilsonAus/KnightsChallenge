@@ -23,6 +23,7 @@ type Piece (position: Square) =
     
     let currentSquare = position    
     let logNewPosition = 
+        printfn "Piece at row: %d column %d" position.Row position.Column |> ignore
         if System.Diagnostics.Debugger.IsAttached then
             System.Threading.Thread.CurrentThread.Join 250 |> ignore
         
