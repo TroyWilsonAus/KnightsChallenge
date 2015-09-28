@@ -32,24 +32,29 @@ type PlayingBoard() =
                                 new PlayingBoardState(squares)
 
     let mutable states = List.init 1 createInitialState
-    let CurrentState = states |> List.last
+    let CurrentState = fun () -> states |> List.head
         
 
-    let updateState = fun (square : Square) ->
-        let currentState = CurrentState
-        let squaresToRemove = currentState.Squares |> List.filter (fun s -> s.Column = square.Column & s.Row = square.Row )
+    let updateStatus = fun (square : Square) ->
+        let currentState = CurrentState()
+        let squaresToRemove = currentState.Squares |> List.filter (fun s -> s.Column = square.Column && s.Row = square.Row )
         let mostSquares = currentState.Squares |> List.except squaresToRemove
-        let squaresToAdd = seq { square} |> Seq.toList 
+        let squaresToAdd = seq { yield square} |> Seq.toList 
         let allSquares = mostSquares |> List.append squaresToAdd 
         let newState = new PlayingBoardState(allSquares)
-        let newStateList = seq { newState} |> Seq.toList
+        let newStateList = seq { yield newState} |> Seq.toList
         states <- states |> List.append newStateList
 
     let findSquare  = fun (possible: PossibleSquare) ->
-        let currentState = CurrentState
+        let currentState = CurrentState()
         let squares = currentState.availableSquares 
         let foundSquare = squares |> List.tryFind(fun s -> possible.Column = s.Column && possible.Row = s.Row)
         foundSquare
+
+    let performMove (square : Square) = 
+        let newSquare = square.ChangeStatus(SquareStatus.Current)
+        updateStatus newSquare
+        new Piece(newSquare)
 
 
     member self.GetNextMove(piece: Piece) = 
@@ -70,12 +75,13 @@ type PlayingBoard() =
             raise (InvalidStateException())
         let state = states |> List.head 
         let requiredSquare = state.Squares |> Seq.find (fun s -> s.Row = row && s.Column = column)
-        let piece = new Piece(requiredSquare)
-        //logFun "Setting start position: Row %d, Column %d" (requiredSquare.Row, requiredSquare.Column)
-        piece
+        performMove requiredSquare
+
+    
+
 
     member self.PerformMove(move : PossibleSquare) =
         let square = findSquare move
         match square with
-        | Some s -> new Piece(s)
+        | Some s -> performMove s
         | None _ -> raise (InvalidStateException())
