@@ -83,9 +83,40 @@ type PlayingBoard() =
     member self.GetNextMove(piece: Piece) = 
         getNextMove_Impl(piece)
                                 
-                        
-
     
+    
+    member self.DrawBoard = fun () ->
+        Console.Clear()
+
+        let formatRow = fun(row) ->
+            let squares = CurrentState().Squares |> List.filter (fun s -> s.Row = row) |> List.sortBy (fun s -> s.Column)
+            let formatSquare = fun (square : Square) ->
+                match square.Status with
+                    | SquareStatus.Available -> " "
+                    | SquareStatus.Current -> "C"
+                    | SquareStatus.Used -> "X"
+
+            //let formattedStatus = squares |> List.collect (fun s -> yield formatSquare(s))  
+            
+            
+            let rowText = sprintf "| %s | %s | %s | %s | %s | %s | %s | %s |" 
+                            (formatSquare (squares.Item 0))
+                            (formatSquare (squares.Item 1))
+                            (formatSquare (squares.Item 2))
+                            (formatSquare (squares.Item 3))
+                            (formatSquare (squares.Item 4))
+                            (formatSquare (squares.Item 5))
+                            (formatSquare (squares.Item 6))
+                            (formatSquare (squares.Item 7))
+                
+            rowText
+
+
+        for row in 1 .. 8 do
+            let rowText = formatRow(row)
+            Console.WriteLine rowText
+            //for col in 1 .. 8 do
+        
 
     
     member self.SetStartPosition row column = 
