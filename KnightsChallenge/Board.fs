@@ -110,9 +110,6 @@ type PlayingBoard() =
                     | SquareStatus.Available -> " "
                     | SquareStatus.Current -> "C"
                     | SquareStatus.Used -> "X"
-
-            //let formattedStatus = squares |> List.collect (fun s -> yield formatSquare(s))  
-            
             
             let rowText = sprintf "| %s | %s | %s | %s | %s | %s | %s | %s |" 
                             (formatSquare (squares.Item 0))
@@ -126,13 +123,11 @@ type PlayingBoard() =
                 
             rowText
 
-
         for row in 1 .. 8 do
             let rowText = formatRow(row)
             Console.WriteLine rowText
-            //for col in 1 .. 8 do
-        printfn "Piece at row: %d column %d" currentSquare.Row currentSquare.Column |> ignore
 
+        printfn "Piece at row: %d column %d" currentSquare.Row currentSquare.Column |> ignore
     
     member self.SetStartPosition row column = 
         if (states |> List.length <> 1) then
