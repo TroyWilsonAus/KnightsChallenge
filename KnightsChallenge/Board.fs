@@ -34,17 +34,31 @@ type PlayingBoard() =
     let mutable states = List.init 1 createInitialState
     let CurrentState = fun () -> states |> List.head
         
+    let changeSquaresToUsed = fun (squares :List<Square> ) ->
+        seq {
+            for s in squares do
+                yield s.ChangeStatus(SquareStatus.Used)
+            }
+        
 
     let updateStatus = fun (square : Square) ->
         let currentState = CurrentState()
-        let squaresToRemove = currentState.Squares |> List.filter (fun s -> s.Column = square.Column && s.Row = square.Row )
+        let squaresToRemove = currentState.Squares |> List.filter (fun s -> (s.Column = square.Column && s.Row = square.Row) || s.Status = SquareStatus.Current )
+        let currentSquares = squaresToRemove |> List.filter (fun s -> s.Status = SquareStatus.Current)
+        let usedSquares = changeSquaresToUsed(currentSquares)
         let mostSquares = currentState.Squares |> List.except squaresToRemove
-        let squaresToAdd = seq { yield square} |> Seq.toList 
+        let squaresToAdd = seq { 
+                                    yield square
+                                    for s in usedSquares do
+                                        yield s
+                                } |> Seq.toList 
         let allSquares = mostSquares |> List.append squaresToAdd 
         let newState = new PlayingBoardState(allSquares)
         let newStateList = seq { yield newState} |> Seq.toList
         states <- states |> List.append newStateList
 
+    
+    
     let findSquare  = fun (possible: PossibleSquare) ->
         let currentState = CurrentState()
         let squares = currentState.availableSquares 
