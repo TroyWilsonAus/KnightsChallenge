@@ -19,7 +19,7 @@ let private moveMap = seq {
                         yield new moveOffset(-2,-1)
                        }
 
-type Piece (position: Square) = 
+type Piece (position: Square, indexOfPossibleMove: int) = 
     
     let currentSquare = position    
     let logNewPosition = 
@@ -32,7 +32,8 @@ type Piece (position: Square) =
     let buildMoves = 
             seq{
                 for o in moveMap do
-                    yield new PossibleSquare(currentSquare.Row + o.Row, currentSquare.Column + o.Column)
+                    let index = moveMap |> Seq.findIndex(fun s -> o.Row = s.Row && o.Column = s.Column)
+                    yield new PossibleSquare(currentSquare.Row + o.Row, currentSquare.Column + o.Column, index)
                 }
     
 

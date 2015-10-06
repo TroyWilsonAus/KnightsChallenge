@@ -10,8 +10,9 @@ type Square (row: int, column: int, status: SquareStatus) =
         new Square(self.Row, self.Column, status)
 
 //[<CustomEquality>]
-type PossibleSquare (row: int, column: int) =
+type PossibleSquare (row: int, column: int, index: int) =
     member self.Row = row
     member self.Column = column
+    member self.Index = index
 
    // override this.

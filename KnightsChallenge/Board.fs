@@ -65,10 +65,10 @@ type PlayingBoard() =
         let foundSquare = squares |> List.tryFind(fun s -> possible.Column = s.Column && possible.Row = s.Row)
         foundSquare
 
-    let performMove (square : Square) = 
+    let performMove (square : Square, indexOfPossibleMove) = 
         let newSquare = square.ChangeStatus(SquareStatus.Current)
         updateStatus newSquare
-        new Piece(newSquare)
+        new Piece(newSquare, indexOfPossibleMove)
 
    
     let rollBackMove = fun () ->
@@ -134,7 +134,7 @@ type PlayingBoard() =
             raise (InvalidStateException())
         let state = states |> List.head 
         let requiredSquare = state.Squares |> Seq.find (fun s -> s.Row = row && s.Column = column)
-        performMove requiredSquare
+        performMove (requiredSquare, -1)
 
     
 
@@ -142,5 +142,5 @@ type PlayingBoard() =
     member self.PerformMove(move : PossibleSquare) =
         let square = findSquare move
         match square with
-        | Some s -> performMove s
+        | Some s -> performMove (s, move.Index)
         | None _ -> raise (InvalidStateException())
