@@ -20,6 +20,7 @@ let main argv =
         let res = logFun "Creating playing board %s" "test"
         let board = new PlayingBoard()
         let mutable piece = board.SetStartPosition s.Row s.Column
+        board.DrawBoard()
         let mutable move = board.GetNextMove(piece)
         while (move.IsSome) do
             if System.Diagnostics.Debugger.IsAttached then

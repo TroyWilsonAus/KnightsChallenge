@@ -101,6 +101,7 @@ type PlayingBoard() =
     
     member self.DrawBoard = fun () ->
         Console.Clear()
+        let currentSquare = CurrentState().Squares |> List.find (fun s -> s.Status = SquareStatus.Current)
 
         let formatRow = fun(row) ->
             let squares = CurrentState().Squares |> List.filter (fun s -> s.Row = row) |> List.sortBy (fun s -> s.Column)
@@ -130,7 +131,7 @@ type PlayingBoard() =
             let rowText = formatRow(row)
             Console.WriteLine rowText
             //for col in 1 .. 8 do
-        
+        printfn "Piece at row: %d column %d" currentSquare.Row currentSquare.Column |> ignore
 
     
     member self.SetStartPosition row column = 
