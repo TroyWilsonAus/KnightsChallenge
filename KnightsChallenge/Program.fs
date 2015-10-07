@@ -23,9 +23,8 @@ let main argv =
         board.DrawBoard()
         let mutable move = board.GetNextMove(piece)
         while (move.IsSome) do
-            if System.Diagnostics.Debugger.IsAttached then
-                System.Threading.Thread.CurrentThread.Join 1000 |> ignore
-            
+            delayFunc()
+                        
             piece <- board.PerformMove(move.Value)
             piece.LogPosition |> ignore
 
