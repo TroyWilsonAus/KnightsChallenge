@@ -22,10 +22,11 @@ let private moveMap = seq {
 type Piece (position: Square, indexOfPossibleMove: int) = 
     
     let currentSquare = position    
-    let logNewPosition = 
+    let logNewPosition = fun _ ->
         //printfn "Piece at row: %d column %d" position.Row position.Column |> ignore
-        if System.Diagnostics.Debugger.IsAttached then
-            System.Threading.Thread.CurrentThread.Join 250 |> ignore
+        //if System.Diagnostics.Debugger.IsAttached then
+        //    System.Threading.Thread.CurrentThread.Join 100 |> ignore
+        ignore
         
     
     
@@ -39,3 +40,4 @@ type Piece (position: Square, indexOfPossibleMove: int) =
 
     member self.BuildMoves = buildMoves
     member self.LogPosition = logNewPosition
+    member self.IndexOfMoveUsed = indexOfPossibleMove
