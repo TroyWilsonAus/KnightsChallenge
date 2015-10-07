@@ -18,88 +18,27 @@ let createDefaultSquares =
                 yield newSquare
         }
 
-type PlayingBoardState (squares: List<Square>) =
+type PlayingBoardState (squares: List<Square>, piece: option<Piece>) =
     let getAvailableSquares = 
         squares |> List.filter( fun s -> s.Status = Available)
 
     member self.availableSquares = getAvailableSquares
     member self.Squares = squares
+    member self.PlayingPiece = piece
 
 type PlayingBoard() =
+    let mutable totalMoveCount = 0
     let logFunc = Util.logFun    
+    let increaseMoveCount = fun _ -> totalMoveCount <- totalMoveCount + 1                                
     let createInitialState = fun _ ->
                                 let squares = createDefaultSquares |> Seq.toList
-                                new PlayingBoardState(squares)
+                                new PlayingBoardState(squares, None)
 
     let mutable states = List.init 1 createInitialState
     let CurrentState = fun () -> states |> List.head
-        
-    let changeSquaresToUsed = fun (squares :List<Square> ) ->
-        seq {
-            for s in squares do
-                yield s.ChangeStatus(SquareStatus.Used)
-            }
-        
-
-    let updateStatus = fun (square : Square) ->
-        let currentState = CurrentState()
-        let squaresToRemove = currentState.Squares |> List.filter (fun s -> (s.Column = square.Column && s.Row = square.Row) || s.Status = SquareStatus.Current )
-        let currentSquares = squaresToRemove |> List.filter (fun s -> s.Status = SquareStatus.Current)
-        let usedSquares = changeSquaresToUsed(currentSquares)
-        let mostSquares = currentState.Squares |> List.except squaresToRemove
-        let squaresToAdd = seq { 
-                                    yield square
-                                    for s in usedSquares do
-                                        yield s
-                                } |> Seq.toList 
-        let allSquares = mostSquares |> List.append squaresToAdd 
-        let newState = new PlayingBoardState(allSquares)
-        let newStateList = seq { yield newState} |> Seq.toList
-        states <- states |> List.append newStateList
 
     
-    
-    let findSquare  = fun (possible: PossibleSquare) ->
-        let currentState = CurrentState()
-        let squares = currentState.availableSquares 
-        let foundSquare = squares |> List.tryFind(fun s -> possible.Column = s.Column && possible.Row = s.Row)
-        foundSquare
-
-    let performMove (square : Square, indexOfPossibleMove) = 
-        let newSquare = square.ChangeStatus(SquareStatus.Current)
-        updateStatus newSquare
-        new Piece(newSquare, indexOfPossibleMove)
-
-   
-    let rollBackMove = fun () ->
-        printfn "Rolling back move, before: %d" states.Length
-        states <- states.Tail
-        printfn "Rolling back move, after: %d" states.Length
-        //GetNextMove(piece)
-
-    let rec getNextMove_Impl = fun (piece: Piece) ->
-        let possibleMoves = piece.BuildMoves |> Seq.toList        
-        
-        let tryPrevMov = fun () ->
-            rollBackMove()
-            getNextMove_Impl(piece)
-
-        //for m in moves do
-        let destination = possibleMoves |> List.tryFind(fun m -> 
-                match findSquare m with 
-                | Some s -> true
-                | None _ -> false)
-
-        match destination with
-            | Some m -> Option.Some m
-            | None _ -> tryPrevMov()
-
-    member self.GetNextMove(piece: Piece) = 
-        getNextMove_Impl(piece)
-                                
-    
-    
-    member self.DrawBoard = fun () ->
+    let drawBoardFunc = fun () ->
         Console.Clear()
         let currentSquare = CurrentState().Squares |> List.find (fun s -> s.Status = SquareStatus.Current)
 
@@ -128,6 +67,90 @@ type PlayingBoard() =
             Console.WriteLine rowText
 
         printfn "Piece at row: %d column %d" currentSquare.Row currentSquare.Column |> ignore
+        printfn "Current move count: %d" (states.Length - 1)
+        printfn "Total move count: %d" totalMoveCount
+    
+        
+    let changeSquaresToUsed = fun (squares :List<Square> ) ->
+        seq {
+            for s in squares do
+                yield s.ChangeStatus(SquareStatus.Used)
+            }
+        
+
+    let updateStatus = fun (square : Square, piece: Piece) ->
+        let currentState = CurrentState()
+        let squaresToRemove = currentState.Squares |> List.filter (fun s -> (s.Column = square.Column && s.Row = square.Row) || s.Status = SquareStatus.Current )
+        let currentSquares = squaresToRemove |> List.filter (fun s -> s.Status = SquareStatus.Current)
+        let usedSquares = changeSquaresToUsed(currentSquares)
+        let mostSquares = currentState.Squares |> List.except squaresToRemove
+        let squaresToAdd = seq { 
+                                    yield square
+                                    for s in usedSquares do
+                                        yield s
+                                } |> Seq.toList 
+        let allSquares = mostSquares |> List.append squaresToAdd 
+        let newState = new PlayingBoardState(allSquares,  option.Some(piece))
+        let newStateList = seq { yield newState} |> Seq.toList
+        states <- states |> List.append newStateList
+
+    
+    
+    let findSquare  = fun (possible: PossibleSquare) ->
+        let currentState = CurrentState()
+        let squares = currentState.availableSquares 
+        let foundSquare = squares |> List.tryFind(fun s -> possible.Column = s.Column && possible.Row = s.Row)
+        foundSquare
+
+    let performMove (square : Square, indexOfPossibleMove) = 
+        let newSquare = square.ChangeStatus(SquareStatus.Current)
+        let piece = new Piece(newSquare, indexOfPossibleMove)
+        updateStatus( newSquare, piece)
+        piece
+
+   
+    let rollBackMove = fun () ->
+        //printfn "Rolling back move, before: %d" states.Length
+        states <- states.Tail
+        //printfn "Rolling back move, after: %d" states.Length
+        //GetNextMove(piece)
+
+    let getSkipNumber = fun(piece: Piece, shouldSkip : bool) ->
+        if (shouldSkip) then
+            (piece.IndexOfMoveUsed + 1)
+        else
+            0
+
+    let rec getNextMove_Impl = fun (piece: Piece, carryOn : bool) ->
+        let skipNumber = getSkipNumber(piece, carryOn)
+        let possibleMovesAll = piece.BuildMoves |> Seq.toList
+        let possibleMoves = possibleMovesAll |> List.skip skipNumber
+
+        increaseMoveCount()
+        
+        let tryPrevMov = fun () ->
+            rollBackMove()            
+            drawBoardFunc()
+            for r in 1 .. 10 do
+                delayFunc()
+            
+            let currentState = CurrentState()
+            let newPiece = currentState.PlayingPiece
+            getNextMove_Impl(newPiece.Value, true)
+
+        let destination = possibleMoves |> List.tryFind(fun m -> 
+                match findSquare m with 
+                | Some s -> true
+                | None _ -> false)
+
+        match destination with
+            | Some m -> Option.Some m
+            | None _ -> tryPrevMov()
+
+    member self.GetNextMove(piece: Piece) = 
+        getNextMove_Impl(piece, false)
+                                
+    
     
     member self.SetStartPosition row column = 
         if (states |> List.length <> 1) then
@@ -136,7 +159,7 @@ type PlayingBoard() =
         let requiredSquare = state.Squares |> Seq.find (fun s -> s.Row = row && s.Column = column)
         performMove (requiredSquare, -1)
 
-    
+    member self.DrawBoard  = drawBoardFunc
 
 
     member self.PerformMove(move : PossibleSquare) =
