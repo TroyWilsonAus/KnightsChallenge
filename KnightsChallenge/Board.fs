@@ -111,6 +111,8 @@ type PlayingBoard() =
         updateStatus( newSquare, piece)
         piece
 
+    let allSquaresUsed = fun () ->
+        CurrentState().availableSquares.Equals(0)
    
     let rollBackMove = fun () ->        
         let lastIndex = CurrentState().PlayingPiece.Value.IndexOfMoveUsed
@@ -159,6 +161,7 @@ type PlayingBoard() =
 
     member self.DrawBoard  = drawBoardFunc
 
+    member self.AllSquaresUsed = allSquaresUsed
 
     member self.PerformMove(move : PossibleSquare) =
         let square = findSquare move
