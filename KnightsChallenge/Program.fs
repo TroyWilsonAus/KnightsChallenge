@@ -9,6 +9,11 @@ open Piece
 open Board
 
 
+let LogFailure = fun(s : Square) ->
+    logFun "Failed to use all squares starting at Row: %d, Col: %d" s.Row, s.Column
+
+let LogSuccess = fun(s: Square, b :PlayingBoard) ->
+    logFun "Used all squares starting at Row: %d, Col: %d" s.Row, s.Column
     
 
 [<EntryPoint>]
@@ -28,6 +33,12 @@ let main argv =
             board.DrawBoard()
 
             move <- board.GetNextMove(piece)
+        
+        match board.AllSquaresUsed() with
+            | true  -> LogSuccess(s, board) |> ignore
+            | false -> LogFailure(s) |> ignore
+            
+            
             
 
     0 // return an integer exit code
