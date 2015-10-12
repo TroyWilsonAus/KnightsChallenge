@@ -22,13 +22,12 @@ let main argv =
         let mutable piece = board.SetStartPosition s.Row s.Column
         board.DrawBoard()
         let mutable move = board.GetNextMove(piece)
-        while (move.IsSome) do
-            delayFunc()
-                        
+        while (move.IsSome) do                        
             piece <- board.PerformMove(move.Value)
             piece.LogPosition |> ignore
+            board.DrawBoard()
 
             move <- board.GetNextMove(piece)
-            board.DrawBoard()
+            
 
     0 // return an integer exit code
