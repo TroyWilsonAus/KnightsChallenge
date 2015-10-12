@@ -28,8 +28,10 @@ type PlayingBoardState (squares: List<Square>, piece: option<Piece>) =
 
 type PlayingBoard() =
     let mutable totalMoveCount = 0
-    let logFunc = Util.logFun    
-    let increaseMoveCount = fun _ -> totalMoveCount <- totalMoveCount + 1                                
+    let mutable totalRollbackCount = 0
+    let logFunc = Util.logFun 
+    let increaseRollbackCount = fun () -> totalRollbackCount   <- totalRollbackCount + 1
+    let increaseMoveCount = fun () -> totalMoveCount <- totalMoveCount + 1                                
     let createInitialState = fun _ ->
                                 let squares = createDefaultSquares |> Seq.toList
                                 new PlayingBoardState(squares, None)
@@ -69,8 +71,9 @@ type PlayingBoard() =
         printfn "Piece at row: %d column %d" currentSquare.Row currentSquare.Column |> ignore
         printfn "Current move count: %d" (states.Length - 1)
         printfn "Total move count: %d" totalMoveCount
-    
-        
+        printfn "Total rollback count: %d" totalRollbackCount    
+        delayFunc()
+
     let changeSquaresToUsed = fun (squares :List<Square> ) ->
         seq {
             for s in squares do
@@ -109,34 +112,29 @@ type PlayingBoard() =
         piece
 
    
-    let rollBackMove = fun () ->
-        //printfn "Rolling back move, before: %d" states.Length
+    let rollBackMove = fun () ->        
+        let lastIndex = CurrentState().PlayingPiece.Value.IndexOfMoveUsed
         states <- states.Tail
-        //printfn "Rolling back move, after: %d" states.Length
-        //GetNextMove(piece)
+        increaseRollbackCount()
+        lastIndex
 
-    let getSkipNumber = fun(piece: Piece, shouldSkip : bool) ->
-        if (shouldSkip) then
-            (piece.IndexOfMoveUsed + 1)
-        else
-            0
+    let getSkipNumber = fun(piece: Piece, shouldSkip : int) ->
+        shouldSkip
 
-    let rec getNextMove_Impl = fun (piece: Piece, carryOn : bool) ->
-        let skipNumber = getSkipNumber(piece, carryOn)
+    let rec getNextMove_Impl = fun (piece: Piece, indexToStartAt : int) ->
+        let skipNumber = getSkipNumber(piece, indexToStartAt)
         let possibleMovesAll = piece.BuildMoves |> Seq.toList
         let possibleMoves = possibleMovesAll |> List.skip skipNumber
 
         increaseMoveCount()
         
         let tryPrevMov = fun () ->
-            rollBackMove()            
+            let newIndex  = rollBackMove() + 1            
             drawBoardFunc()
-            for r in 1 .. 10 do
-                delayFunc()
             
             let currentState = CurrentState()
             let newPiece = currentState.PlayingPiece
-            getNextMove_Impl(newPiece.Value, true)
+            getNextMove_Impl(newPiece.Value, newIndex)
 
         let destination = possibleMoves |> List.tryFind(fun m -> 
                 match findSquare m with 
@@ -148,7 +146,7 @@ type PlayingBoard() =
             | None _ -> tryPrevMov()
 
     member self.GetNextMove(piece: Piece) = 
-        getNextMove_Impl(piece, false)
+        getNextMove_Impl(piece, 0)
                                 
     
     
