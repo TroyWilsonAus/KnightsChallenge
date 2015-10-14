@@ -31,15 +31,12 @@ let CheckSquare = fun(s: Square) ->
     match board.AllSquaresUsed() with
         | true  -> LogSuccess(s, board) |> ignore
         | false -> LogFailure(s)  |> ignore
-    
-        
+            
 [<EntryPoint>]
 let main argv = 
     
     let allSquares = Board.createDefaultSquares
-
     for s in allSquares do
         CheckSquare(s)
-                    
 
     0 // return an integer exit code
