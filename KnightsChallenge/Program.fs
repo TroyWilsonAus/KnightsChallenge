@@ -14,6 +14,7 @@ let LogFailure = fun(s : Square) ->
 
 let LogSuccess = fun(s: Square, b :PlayingBoard) ->
     logFun "Used all squares starting at Row: %d, Col: %d" s.Row, s.Column
+    // Need to log to file all moves
 
 let CheckSquare = fun(s: Square) -> 
     let res = logFun "Creating playing board %s" "test"
